@@ -46,7 +46,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   //     passwordChangedAt: req.body.passwordChangedAt,
   //   });
   const url = `${req.protocol}://${req.get('host')}/me`;
-  console.log(url);
+  // console.log(url);
   await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, res);
@@ -54,8 +54,6 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-  console.log('login data');
-  console.log(req.body);
   // 1) Check if email and password exists
   if (!email || !password) {
     return next(new AppError('Please provide email and password', 400));

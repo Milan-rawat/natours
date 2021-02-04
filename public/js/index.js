@@ -11,11 +11,8 @@ const logOutBtn = document.querySelector('.nav__el--logout');
 const userDataForm = document.querySelector('.form-user-data');
 const userPasswordForm = document.querySelector('.form-user-password');
 const bookBtn = document.getElementById('book-tour');
-console.log('in index.js file');
-// VALUES
-if (userDataForm) console.log('true');
-if (!userDataForm) console.log('false');
 
+// VALUES
 // DELEGATION
 if (mapBox) {
   const locations = JSON.parse(mapBox.dataset.locations);
@@ -29,8 +26,6 @@ if (loginForm) {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     login(email, password);
-    console.log('This is login data');
-    console.log(email, password);
   });
 }
 
