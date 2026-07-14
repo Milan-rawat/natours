@@ -123,7 +123,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
 // Only for rendered pages, no errors!
 exports.isLoggedIn = async (req, res, next) => {
-  if (req.cookies.jwt) {
+  if (req.cookies.jwt && req.cookies.jwt !== 'loggedout') {
     try {
       // 1) verify  token
       const decoded = await promisify(jwt.verify)(

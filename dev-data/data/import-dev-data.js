@@ -35,7 +35,15 @@ const reviews = JSON.parse(
 const importData = async () => {
   try {
     await Tour.create(tours);
-    await User.create(users, { validateBeforeSave: false });
+
+    // Convert _id strings to ObjectId so User.findById works correctly
+    const { ObjectId } = require('mongoose').Types;
+    const usersFixed = users.map((u) => ({
+      ...u,
+      _id: new ObjectId(u._id),
+    }));
+    await User.collection.insertMany(usersFixed);
+
     await Review.create(reviews);
     console.log('Data successfully loaded');
   } catch (err) {

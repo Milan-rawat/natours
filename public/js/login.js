@@ -24,14 +24,27 @@ export const login = async (email, password) => {
 };
 
 export const logout = async () => {
+  const result = await Swal.fire({
+    title: 'Log out?',
+    text: 'You will be redirected to the home page.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#55c57a',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'Yes, log me out',
+    cancelButtonText: 'Cancel',
+  });
+
+  if (!result.isConfirmed) return;
+
   try {
     const res = await axios({
       method: 'GET',
       url: '/api/v1/users/logout',
     });
 
-    if (res.data.status === 'success') location.reload(true);
+    if (res.data.status === 'success') location.assign('/');
   } catch (err) {
-    showAlert('error', 'Error logging ou! Try again.');
+    showAlert('error', 'Error logging out! Try again.');
   }
 };
