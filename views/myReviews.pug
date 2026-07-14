@@ -1,0 +1,240 @@
+extends base
+
+mixin navItem(link, text, icon, active)
+    li(class=`${active ? 'side-nav--active' : ''}`)
+        a(href=`${link}`)
+          svg
+            use(xlink:href=`/img/icons.svg#icon-${icon}`)
+          | #{text}
+
+block content
+    main.main
+      .user-view
+        nav.user-view__menu
+          ul.side-nav
+            +navItem('/me', 'Settings', 'settings')
+            +navItem('/my-tours', 'My bookings', 'briefcase')
+            +navItem('/my-reviews', 'My reviews', 'star', true)
+            +navItem('#', 'Billing', 'credit-card')
+
+        .user-view__content
+          .user-view__form-container
+            h2.heading-secondary.ma-bt-md My Reviews
+
+            if reviews.length === 0
+              p.reviews-empty No reviews yet. Book a tour and share your experience!
+
+            else
+              .my-reviews-list
+                each review in reviews
+                  .my-review-card(data-review-id=`${review.id}`)
+                    .my-review-card__header
+                      .my-review-card__tour-info
+                        img.my-review-card__tour-img(
+                            src=`/img/tours/${review.tour.imageCover}`
+                            alt=`${review.tour.name}`
+                        )
+                        .my-review-card__tour-details
+                          h3.my-review-card__tour-name= review.tour.name
+                          span.my-review-card__date= new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+                      .my-review-card__actions
+                        button.btn.btn--small.btn--green.btn--edit-review(
+                            data-review-id=`${review.id}`
+                        ) Edit
+                        button.btn.btn--small.btn--red.btn--delete-review(
+                            data-review-id=`${review.id}`
+                        ) Delete
+
+                    //- View mode
+                    .my-review-card__view(data-review-id=`${review.id}`)
+                      .star-display
+                        each star in [1, 2, 3, 4, 5]
+                          svg.reviews__star(
+                              class=`reviews__star--${review.rating >= star ? 'active' : 'inactive'}`
+                          )
+                            use(xlink:href='/img/icons.svg#icon-star')
+                      p.my-review-card__text= review.review
+
+                    //- Edit mode (hidden by default)
+                    .my-review-card__edit(
+                        data-review-id=`${review.id}`
+                        data-current-rating=`${review.rating}`
+                        style='display:none'
+                    )
+                      .edit-star-rating(data-review-id=`${review.id}` data-selected=`${review.rating}`)
+                        each star in [1, 2, 3, 4, 5]
+                          svg.edit-star(
+                              data-value=`${star}`
+                              class=`reviews__star reviews__star--${review.rating >= star ? 'active' : 'inactive'}`
+                          )
+                            use(xlink:href='/img/icons.svg#icon-star')
+                      textarea.form__input.my-review-card__textarea(
+                          rows='4'
+                          data-review-id=`${review.id}`
+                      )= review.review
+                      .my-review-card__edit-actions
+                        button.btn.btn--small.btn--green.btn--save-review(
+                            data-review-id=`${review.id}`
+                        ) Save
+                        button.btn.btn--small.btn--cancel-review(
+                            data-review-id=`${review.id}`
+                        ) Cancel
+
+block scripts
+    script.
+        (function () {
+
+            // ── SweetAlert2 helpers ──────────────────────────────────────────
+            var Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+            });
+
+            function showMsg(type, msg) {
+                Toast.fire({ icon: type === 'error' ? 'error' : 'success', title: msg });
+            }
+
+            function qs(selector) { return document.querySelector(selector); }
+
+            // ── toggle view / edit ───────────────────────────────────────────
+            function switchToEdit(id) {
+                var viewEl  = qs('.my-review-card__view[data-review-id="'  + id + '"]');
+                var editEl  = qs('.my-review-card__edit[data-review-id="'  + id + '"]');
+                var editBtn = qs('.btn--edit-review[data-review-id="'      + id + '"]');
+                if (viewEl)  viewEl.style.display  = 'none';
+                if (editEl)  editEl.style.display  = 'block';
+                if (editBtn) editBtn.style.display  = 'none';
+            }
+
+            function switchToView(id) {
+                var viewEl  = qs('.my-review-card__view[data-review-id="'  + id + '"]');
+                var editEl  = qs('.my-review-card__edit[data-review-id="'  + id + '"]');
+                var editBtn = qs('.btn--edit-review[data-review-id="'      + id + '"]');
+                if (viewEl)  viewEl.style.display  = 'block';
+                if (editEl)  editEl.style.display  = 'none';
+                if (editBtn) editBtn.style.display  = 'inline-block';
+            }
+
+            // ── star interactivity ───────────────────────────────────────────
+            function initStars(ratingEl) {
+                var stars    = ratingEl.querySelectorAll('.edit-star');
+                var selected = parseInt(ratingEl.dataset.selected, 10) || 0;
+
+                function paint(upTo) {
+                    stars.forEach(function (s, i) {
+                        s.classList.toggle('reviews__star--active',   i < upTo);
+                        s.classList.toggle('reviews__star--inactive', i >= upTo);
+                    });
+                }
+
+                stars.forEach(function (star) {
+                    star.addEventListener('mouseover', function () { paint(+star.dataset.value); });
+                    star.addEventListener('mouseout',  function () { paint(selected); });
+                    star.addEventListener('click',     function () {
+                        selected = +star.dataset.value;
+                        ratingEl.dataset.selected = selected;
+                        paint(selected);
+                    });
+                });
+            }
+
+            document.querySelectorAll('.edit-star-rating').forEach(initStars);
+
+            // ── event delegation ─────────────────────────────────────────────
+            var list = document.querySelector('.my-reviews-list');
+            if (!list) return;
+
+            list.addEventListener('click', function (e) {
+
+                // ── Delete ────────────────────────────────────────────────────
+                var delBtn = e.target.closest('.btn--delete-review');
+                if (delBtn) {
+                    var delId = delBtn.dataset.reviewId;
+                    Swal.fire({
+                        title: 'Delete review?',
+                        text: 'This action cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e74c3c',
+                        cancelButtonColor:  '#aaa',
+                        confirmButtonText:  'Yes, delete it',
+                        cancelButtonText:   'Cancel'
+                    }).then(function (result) {
+                        if (!result.isConfirmed) return;
+
+                        fetch('/api/v1/reviews/' + delId, { method: 'DELETE' })
+                            .then(function (res) {
+                                if (!res.ok) return res.json().then(function (d) { throw new Error(d.message); });
+                                showMsg('success', 'Review deleted.');
+                                var card = qs('.my-review-card[data-review-id="' + delId + '"]');
+                                if (card) card.remove();
+                                if (!document.querySelector('.my-review-card'))
+                                    list.innerHTML = '<p class="reviews-empty">No reviews yet. Book a tour and share your experience!</p>';
+                            })
+                            .catch(function (err) { showMsg('error', err.message || 'Could not delete review.'); });
+                    });
+                    return;
+                }
+
+                // ── Edit ──────────────────────────────────────────────────────
+                var editBtn = e.target.closest('.btn--edit-review');
+                if (editBtn) { switchToEdit(editBtn.dataset.reviewId); return; }
+
+                // ── Cancel ────────────────────────────────────────────────────
+                var cancelBtn = e.target.closest('.btn--cancel-review');
+                if (cancelBtn) { switchToView(cancelBtn.dataset.reviewId); return; }
+
+                // ── Save ──────────────────────────────────────────────────────
+                var saveBtn = e.target.closest('.btn--save-review');
+                if (saveBtn) {
+                    var rid      = saveBtn.dataset.reviewId;
+                    var editEl   = qs('.my-review-card__edit[data-review-id="' + rid + '"]');
+                    var ratingEl = editEl.querySelector('.edit-star-rating');
+                    var text     = editEl.querySelector('textarea').value.trim();
+                    var rating   = parseInt(ratingEl.dataset.selected, 10);
+
+                    if (!text)                       return showMsg('error', 'Review text cannot be empty.');
+                    if (!rating || rating < 1 || rating > 5)
+                        return showMsg('error', 'Please select a star rating.');
+
+                    saveBtn.textContent = 'Saving...';
+                    saveBtn.disabled    = true;
+
+                    fetch('/api/v1/reviews/' + rid, {
+                        method:  'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ review: text, rating: rating })
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data.status !== 'success') throw new Error(data.message || 'Update failed.');
+
+                        showMsg('success', 'Review updated!');
+
+                        var viewEl = qs('.my-review-card__view[data-review-id="' + rid + '"]');
+                        if (viewEl) {
+                            viewEl.querySelectorAll('.reviews__star').forEach(function (s, i) {
+                                s.classList.toggle('reviews__star--active',   i < rating);
+                                s.classList.toggle('reviews__star--inactive', i >= rating);
+                            });
+                            var textEl = viewEl.querySelector('.my-review-card__text');
+                            if (textEl) textEl.textContent = text;
+                        }
+
+                        switchToView(rid);
+                        saveBtn.textContent = 'Save';
+                        saveBtn.disabled    = false;
+                    })
+                    .catch(function (err) {
+                        showMsg('error', err.message || 'Could not update review.');
+                        saveBtn.textContent = 'Save';
+                        saveBtn.disabled    = false;
+                    });
+                }
+            });
+
+        })();

@@ -71,7 +71,7 @@ block content
                 img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} ${i+1}`, class=`picture-box__img--${i + 1}`)
 
     section.section-map
-        #map(data-locations=`${JSON.stringify(tour.locations)}`)
+        #map(data-locations=`${JSON.stringify(tour.locations)}` data-mapbox-token=`${mapboxToken}`)
 
 
 
@@ -80,6 +80,32 @@ block content
         .reviews
             each review in tour.reviews
                 +reviewCard(review)
+
+        if user && hasBooked && !hasReviewed
+            .review-form-container
+                h3.heading-tertiary.ma-bt-md Share your experience
+                form.form.form--review#review-form(data-tour-id=`${tour.id}`)
+                    .form__group
+                        label.form__label Your Rating
+                        .review-star-input#review-stars
+                            each val in [1, 2, 3, 4, 5]
+                                svg.review-star-icon(data-value=`${val}`)
+                                    use(xlink:href='/img/icons.svg#icon-star')
+                        input#review-rating(type='hidden' name='rating' value='0')
+                    .form__group
+                        label.form__label(for='review-text') Your Review
+                        textarea#review-text.form__input(
+                            rows='5'
+                            placeholder='Tell us about your experience...'
+                            required
+                        )
+                    .form__group.right
+                        button.btn.btn--green.btn--small#btn-submit-review(type='submit') Submit Review
+
+        else if user && hasBooked && hasReviewed
+            p.review-already-submitted You've already reviewed this tour. Visit
+                a(href='/my-reviews')  My Reviews
+                |  to edit it.
 
 
 
@@ -99,3 +125,81 @@ block content
                     a.btn.btn--green.span-all-rows(href='/login') Log in to book tour
 
     script(src='/js/mapbox.js')
+
+block scripts
+    if user && hasBooked && !hasReviewed
+        script.
+            (function() {
+                var form = document.getElementById('review-form');
+                if (!form) return;
+
+                var Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+
+                function showMsg(type, msg) {
+                    Toast.fire({ icon: type === 'error' ? 'error' : 'success', title: msg });
+                }
+
+                var starsContainer = document.getElementById('review-stars');
+                var ratingInput    = document.getElementById('review-rating');
+                var starIcons      = starsContainer.querySelectorAll('.review-star-icon');
+                var selectedRating = 0;
+
+                function highlightStars(upTo) {
+                    starIcons.forEach(function(star, idx) {
+                        star.classList.toggle('review-star-icon--active',  idx < upTo);
+                        star.classList.toggle('review-star-icon--inactive', idx >= upTo);
+                    });
+                }
+
+                starIcons.forEach(function(star) {
+                    star.addEventListener('mouseover', function() { highlightStars(+star.dataset.value); });
+                    star.addEventListener('mouseout',  function() { highlightStars(selectedRating); });
+                    star.addEventListener('click',     function() {
+                        selectedRating    = +star.dataset.value;
+                        ratingInput.value = selectedRating;
+                        highlightStars(selectedRating);
+                    });
+                });
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    var tourId     = form.dataset.tourId;
+                    var reviewText = document.getElementById('review-text').value.trim();
+                    var rating     = parseInt(ratingInput.value, 10);
+                    var submitBtn  = document.getElementById('btn-submit-review');
+
+                    if (!reviewText) return showMsg('error', 'Please write your review.');
+                    if (!rating || rating < 1 || rating > 5)
+                        return showMsg('error', 'Please select a star rating before submitting.');
+
+                    submitBtn.textContent = 'Submitting...';
+                    submitBtn.disabled    = true;
+
+                    fetch('/api/v1/tours/' + tourId + '/reviews', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ review: reviewText, rating: rating })
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data.status === 'success') {
+                            showMsg('success', 'Review submitted! Thank you.');
+                            setTimeout(function() { location.reload(); }, 1500);
+                        } else {
+                            throw new Error(data.message || 'Could not submit review.');
+                        }
+                    })
+                    .catch(function(err) {
+                        submitBtn.textContent = 'Submit Review';
+                        submitBtn.disabled    = false;
+                        showMsg('error', err.message || 'Could not submit review.');
+                    });
+                });
+            })();

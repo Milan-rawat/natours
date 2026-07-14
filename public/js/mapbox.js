@@ -1,27 +1,28 @@
 /* eslint-disable */
 
 export const displayMap = (locations) => {
-  mapboxgl.accessToken =
-    'pk.eyJ1IjoibWlsYW5yYXdhdCIsImEiOiJja2thdzBlZWMxOGF2MnVsbmFnZW9sYXFhIn0.mfxBioCE8J38g4Hs8E7lDA';
+  const mapEl = document.getElementById('map');
+  mapboxgl.accessToken = mapEl.dataset.mapboxToken;
+
   var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
     scrollZoom: false,
-    //   center: [-118.113491, 34.111745],
-    //   zoom: 4,
-    //   interactive: false,
   });
+
+  // Add zoom + rotation controls
+  map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
   const bounds = new mapboxgl.LngLatBounds();
 
   locations.forEach((loc) => {
-    // create marker
+    // Create marker
     const el = document.createElement('div');
     el.className = 'marker';
 
-    //   Add marker
+    // Add marker
     new mapboxgl.Marker({
-      elemet: el,
+      element: el,
       anchor: 'bottom',
     })
       .setLngLat(loc.coordinates)

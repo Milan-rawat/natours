@@ -97,6 +97,12 @@ app.use(
 
 app.use(compression());
 
+// Make env vars available to all pug templates
+app.use((req, res, next) => {
+  res.locals.mapboxToken = process.env.MAPBOX_TOKEN;
+  next();
+});
+
 // Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -112,16 +118,11 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
 
+// Silence noisy browser/devtools auto-requests that are harmless
+app.get('/.well-known/*', (req, res) => res.status(204).end());
+app.get('*.map', (req, res) => res.status(204).end());
+
 app.all('*', (req, res, next) => {
-  // res.status(404).json({
-  //   status: 'fail',
-  //   message: `Can't find ${req.originalUrl} on this server!`,
-  // });
-
-  // const err = new Error(`Can't find ${req.originalUrl} on this server!`);
-  // err.status = 'fail';
-  // err.statusCode = 404;
-
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 

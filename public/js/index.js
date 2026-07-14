@@ -5,6 +5,8 @@ import { signup } from './signup';
 import { updateSettings } from './updateSettings';
 import { bookTour } from './stripe';
 import { showAlert } from './alerts';
+import { initReviewHandlers } from './review';
+import { initReviewForm } from './submitReview';
 
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
@@ -85,6 +87,12 @@ if (bookBtn) {
     bookTour(tourId);
   });
 }
+
+// My Reviews page
+initReviewHandlers();
+
+// Tour page — submit review form
+initReviewForm();
 
 const alertMessage = document.querySelector('body').dataset.alert;
 if (alertMessage) showAlert('success', alertMessage, 20);

@@ -1,6 +1,7 @@
 const Tour = require('../models/tourModel');
 const User = require('../models/userModel');
 const Booking = require('../models/bookingModel');
+const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -37,12 +38,33 @@ exports.getTour = catchAsync(async (req, res, next) => {
     return next(new AppError('There is no tour with that name.', 404));
   }
 
-  // 2) Build template
+  // 2) Check if the logged-in user has booked this tour and already reviewed it
+  let hasBooked = false;
+  let hasReviewed = false;
+
+  const currentUser = res.locals.user;
+  if (currentUser) {
+    const booking = await Booking.findOne({
+      tour: tour._id,
+      user: currentUser._id,
+    });
+    hasBooked = !!booking;
+
+    if (hasBooked) {
+      const existing = await Review.findOne({
+        tour: tour._id,
+        user: currentUser._id,
+      });
+      hasReviewed = !!existing;
+    }
+  }
 
   // 3) Render template using data from 1)
   res.status(200).render('tour', {
     title: `${tour.name} Tour`,
     tour,
+    hasBooked,
+    hasReviewed,
   });
 });
 
@@ -75,6 +97,18 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
   res.status(200).render('overview', {
     title: 'My Tours',
     tours,
+  });
+});
+
+exports.getMyReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find({ user: req.user.id }).populate({
+    path: 'tour',
+    select: 'name imageCover slug',
+  });
+
+  res.status(200).render('myReviews', {
+    title: 'My Reviews',
+    reviews,
   });
 });
 

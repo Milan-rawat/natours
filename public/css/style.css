@@ -689,6 +689,192 @@ body {
   fill: #bbb;
 }
 
+/* ── My Reviews Page ─────────────────────────────────────────────────────── */
+.reviews-empty {
+  font-size: 1.6rem;
+  color: #999;
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.my-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.my-review-card {
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+}
+
+.my-review-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.8rem;
+  gap: 1.5rem;
+}
+
+.my-review-card__tour-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.my-review-card__tour-img {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.my-review-card__tour-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.my-review-card__tour-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.my-review-card__date {
+  font-size: 1.2rem;
+  color: #999;
+}
+
+.my-review-card__actions {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.my-review-card__view .reviews__star {
+  height: 2rem;
+  width: 2rem;
+}
+
+.my-review-card__text {
+  font-size: 1.5rem;
+  color: #555;
+  margin-top: 1rem;
+  line-height: 1.6;
+}
+
+.my-review-card__textarea {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  font-size: 1.5rem;
+  font-family: inherit;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  margin-top: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.my-review-card__edit-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.edit-star-rating {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.edit-star {
+  height: 2.4rem;
+  width: 2.4rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.edit-star:hover {
+  transform: scale(1.2);
+}
+
+.btn--red {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.btn--red:hover {
+  background-color: #c0392b;
+}
+
+.btn--cancel-review {
+  background-color: #aaa;
+  color: #fff;
+}
+
+.btn--cancel-review:hover {
+  background-color: #888;
+}
+
+/* ── Tour Page — Write a Review Form ────────────────────────────────────── */
+.review-form-container {
+  max-width: 72rem;
+  margin: 4rem auto 0;
+  padding: 3.5rem 4rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+.review-star-input {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.review-star-icon {
+  height: 3rem;
+  width: 3rem;
+  cursor: pointer;
+  fill: #bbb;
+  transition: transform 0.1s, fill 0.1s;
+}
+
+.review-star-icon:hover {
+  transform: scale(1.15);
+}
+
+.review-star-icon--active {
+  fill: #55c57a;
+}
+
+.review-star-icon--inactive {
+  fill: #bbb;
+}
+
+.review-already-submitted {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #777;
+  margin-top: 2rem;
+  padding: 1.5rem;
+}
+
+.review-already-submitted a {
+  color: #55c57a;
+  text-decoration: underline;
+}
+
+.form--review textarea.form__input {
+  resize: vertical;
+  min-height: 12rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 .section-cta {
   margin-top: calc(0px - var(--section-rotate));
   padding: 3rem;
