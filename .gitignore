@@ -1,3 +1,5 @@
 node_modules/
 *.env
 .cache/
+# Ignore runtime user-uploaded photos but keep seed photos and .gitkeep
+public/img/users/uploads/user-*-*.jpeg

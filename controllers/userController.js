@@ -40,7 +40,10 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     .resize(500, 500)
     .toFormat('jpeg')
     .jpeg({ quality: 90 })
-    .toFile(`public/img/users/${req.file.filename}`);
+    .toFile(`public/img/users/uploads/${req.file.filename}`);
+
+  // Store with uploads/ prefix so the URL resolves to /img/users/uploads/<filename>
+  req.file.filename = `uploads/${req.file.filename}`;
 
   next();
 });
