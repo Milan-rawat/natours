@@ -1494,6 +1494,27 @@ body {
   border-radius: 5px;
 }
 
+.forgot-password-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 1.4rem;
+  color: #55c57a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+  color: #28b487;
+  text-decoration: underline;
+}
+
+.forgot-password-desc {
+  font-size: 1.5rem;
+  color: #777;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
 .form__input {
   display: block;
   font-family: inherit;

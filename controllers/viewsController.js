@@ -112,6 +112,19 @@ exports.getMyReviews = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getForgotPasswordForm = (req, res) => {
+  res.status(200).render('forgotPassword', {
+    title: 'Forgot Password',
+  });
+};
+
+exports.getResetPasswordForm = (req, res) => {
+  res.status(200).render('resetPassword', {
+    title: 'Reset Password',
+    resetToken: req.params.token,
+  });
+};
+
 exports.updateUserData = catchAsync(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,
