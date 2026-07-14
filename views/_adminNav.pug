@@ -1,0 +1,31 @@
+mixin adminNavItem(link, text, icon, active)
+    li(class=`${active ? 'side-nav--active' : ''}`)
+        a(href=`${link}`)
+          svg
+            use(xlink:href=`/img/icons.svg#icon-${icon}`)
+          | #{text}
+
+mixin adminLayout(activeSection)
+    .user-view
+        nav.user-view__menu
+          ul.side-nav
+            li: a(href='/me')
+              svg: use(xlink:href='/img/icons.svg#icon-settings')
+              | Settings
+            li: a(href='/my-tours')
+              svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+              | My bookings
+            li: a(href='/my-reviews')
+              svg: use(xlink:href='/img/icons.svg#icon-star')
+              | My reviews
+
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              +adminNavItem('/admin/tours',    'Manage tours',    'map',      activeSection === 'tours')
+              +adminNavItem('/admin/users',    'Manage users',    'users',    activeSection === 'users')
+              +adminNavItem('/admin/reviews',  'Manage reviews',  'star',     activeSection === 'reviews')
+              +adminNavItem('/admin/bookings', 'Manage bookings', 'briefcase',activeSection === 'bookings')
+
+        .user-view__content
+            block adminContent

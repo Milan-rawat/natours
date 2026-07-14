@@ -1,0 +1,232 @@
+extends base
+include _adminPagination
+
+block content
+    main.main
+      .user-view
+        nav.user-view__menu
+          ul.side-nav
+            li: a(href='/me')
+              svg: use(xlink:href='/img/icons.svg#icon-settings')
+              | Settings
+            li: a(href='/my-tours')
+              svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+              | My bookings
+            li: a(href='/my-reviews')
+              svg: use(xlink:href='/img/icons.svg#icon-star')
+              | My reviews
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              li.side-nav--active: a(href='/admin/tours')
+                svg: use(xlink:href='/img/icons.svg#icon-map')
+                | Manage tours
+              li: a(href='/admin/users')
+                svg: use(xlink:href='/img/icons.svg#icon-users')
+                | Manage users
+              li: a(href='/admin/reviews')
+                svg: use(xlink:href='/img/icons.svg#icon-star')
+                | Manage reviews
+              li: a(href='/admin/bookings')
+                svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Manage bookings
+
+        .user-view__content
+          .user-view__form-container.admin-table-container
+            .admin-table-header
+              h2.heading-secondary Manage Tours
+              .admin-table-actions
+                form.admin-search-form(method='GET' action='/admin/tours')
+                  input.form__input.admin-search#admin-search(
+                    type='text'
+                    name='search'
+                    placeholder='Search tours...'
+                    value=search
+                    autocomplete='off'
+                  )
+                  button.btn.btn--green.btn--small(type='submit') Search
+                  if search
+                    a.btn.btn--small.btn--cancel-review(href='/admin/tours') Clear
+                button.btn.btn--green.btn--small#btn-create-tour + New Tour
+
+            if tours.length === 0
+              p.reviews-empty No tours found.
+            else
+              .admin-table-wrapper
+                table.admin-table#tours-table
+                  thead
+                    tr
+                      th Cover
+                      th Name
+                      th Duration
+                      th Difficulty
+                      th Price
+                      th Rating
+                      th Group Size
+                      th Actions
+                  tbody
+                    each tour in tours
+                      tr(data-id=`${tour.id}`)
+                        td
+                          img.admin-table__img(src=`/img/tours/${tour.imageCover}` alt=`${tour.name}`)
+                        td.admin-table__name= tour.name
+                        td= `${tour.duration} days`
+                        td
+                          span(class=`badge badge--${tour.difficulty}`)= tour.difficulty
+                        td= `$${tour.price}`
+                        td= `${tour.ratingsAverage} ★ (${tour.ratingsQuantity})`
+                        td= tour.maxGroupSize
+                        td.admin-table__btns
+                          a.btn.btn--small.btn--green(href=`/tour/${tour.slug}` target='_blank') View
+                          button.btn.btn--small.btn--yellow.btn--edit-tour(
+                            data-id=`${tour.id}`
+                            data-name=`${tour.name}`
+                            data-duration=`${tour.duration}`
+                            data-maxgroup=`${tour.maxGroupSize}`
+                            data-difficulty=`${tour.difficulty}`
+                            data-price=`${tour.price}`
+                            data-summary=`${tour.summary || ''}`
+                          ) Edit
+                          button.btn.btn--small.btn--red.btn--delete-tour(data-id=`${tour.id}`) Delete
+
+              +adminPagination(pagination, search, '/admin/tours')
+
+block scripts
+    script.
+        (function () {
+            var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+            function showMsg(type, msg) { Toast.fire({ icon: type, title: msg }); }
+
+            document.getElementById('tours-table').addEventListener('click', function (e) {
+
+                // ── Delete ───────────────────────────────────────────────────
+                var delBtn = e.target.closest('.btn--delete-tour');
+                if (delBtn) {
+                    var id = delBtn.dataset.id;
+                    Swal.fire({
+                        title: 'Delete this tour?', text: 'This cannot be undone.', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#e74c3c', cancelButtonColor: '#aaa',
+                        confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel'
+                    }).then(function (res) {
+                        if (!res.isConfirmed) return;
+                        fetch('/api/v1/tours/' + id, { method: 'DELETE' })
+                            .then(function (r) {
+                                if (r.status === 204) {
+                                    showMsg('success', 'Tour deleted.');
+                                    delBtn.closest('tr').remove();
+                                } else {
+                                    return r.json().then(function (d) { throw new Error(d.message); });
+                                }
+                            })
+                            .catch(function (err) { showMsg('error', err.message || 'Could not delete tour.'); });
+                    });
+                    return;
+                }
+
+                // ── Edit ─────────────────────────────────────────────────────
+                var editBtn = e.target.closest('.btn--edit-tour');
+                if (editBtn) {
+                    var tid  = editBtn.dataset.id;
+                    var diff = editBtn.dataset.difficulty;
+                    var opts = ['easy','medium','difficult'].map(function(d) {
+                        return '<option value="' + d + '"' + (diff === d ? ' selected' : '') + '>' + d.charAt(0).toUpperCase() + d.slice(1) + '</option>';
+                    }).join('');
+
+                    Swal.fire({
+                        title: 'Edit Tour',
+                        html:
+                            '<input id="t-name"     class="swal2-input" placeholder="Name"              value="' + editBtn.dataset.name + '">' +
+                            '<input id="t-duration" class="swal2-input" type="number" placeholder="Duration (days)" value="' + editBtn.dataset.duration + '">' +
+                            '<input id="t-maxGroup" class="swal2-input" type="number" placeholder="Max group size"  value="' + editBtn.dataset.maxgroup + '">' +
+                            '<select id="t-difficulty" class="swal2-select" style="width:90%;padding:10px;margin:5px 0;font-size:1.4rem">' + opts + '</select>' +
+                            '<input id="t-price"    class="swal2-input" type="number" placeholder="Price ($)"      value="' + editBtn.dataset.price + '">' +
+                            '<input id="t-summary"  class="swal2-input" placeholder="Summary"           value="' + editBtn.dataset.summary + '">',
+                        confirmButtonColor: '#55c57a',
+                        showCancelButton: true,
+                        preConfirm: function () {
+                            var name = document.getElementById('t-name').value.trim();
+                            var duration = +document.getElementById('t-duration').value;
+                            var maxGroupSize = +document.getElementById('t-maxGroup').value;
+                            var difficulty = document.getElementById('t-difficulty').value;
+                            var price = +document.getElementById('t-price').value;
+                            var summary = document.getElementById('t-summary').value.trim();
+                            if (!name || !duration || !maxGroupSize || !difficulty || !price) {
+                                Swal.showValidationMessage('Please fill in all required fields.');
+                                return false;
+                            }
+                            return { name: name, duration: duration, maxGroupSize: maxGroupSize, difficulty: difficulty, price: price, summary: summary };
+                        }
+                    }).then(function (res) {
+                        if (!res.isConfirmed) return;
+                        fetch('/api/v1/tours/' + tid, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(res.value)
+                        })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.status === 'success') {
+                                showMsg('success', 'Tour updated!');
+                                setTimeout(function () { location.reload(); }, 1200);
+                            } else { throw new Error(data.message); }
+                        })
+                        .catch(function (err) { showMsg('error', err.message || 'Could not update tour.'); });
+                    });
+                }
+            });
+
+            // ── Create new tour ──────────────────────────────────────────────
+            document.getElementById('btn-create-tour').addEventListener('click', function () {
+                Swal.fire({
+                    title: 'Create New Tour',
+                    html:
+                        '<input id="s-name"     class="swal2-input" placeholder="Name (min 10 chars)">' +
+                        '<input id="s-duration" class="swal2-input" type="number" placeholder="Duration (days)">' +
+                        '<input id="s-maxGroup" class="swal2-input" type="number" placeholder="Max group size">' +
+                        '<select id="s-difficulty" class="swal2-select" style="width:90%;padding:10px;margin:5px 0;font-size:1.4rem">' +
+                            '<option value="">Select difficulty</option>' +
+                            '<option value="easy">Easy</option>' +
+                            '<option value="medium">Medium</option>' +
+                            '<option value="difficult">Difficult</option>' +
+                        '</select>' +
+                        '<input id="s-price"      class="swal2-input" type="number" placeholder="Price ($)">' +
+                        '<input id="s-summary"    class="swal2-input" placeholder="Summary">' +
+                        '<input id="s-imageCover" class="swal2-input" placeholder="Image cover filename (e.g. tour-1-cover.jpg)">' +
+                        '<input id="s-startLocation" class="swal2-input" placeholder="Start location description">',
+                    confirmButtonColor: '#55c57a',
+                    showCancelButton: true,
+                    preConfirm: function () {
+                        var name = document.getElementById('s-name').value.trim();
+                        var duration = +document.getElementById('s-duration').value;
+                        var maxGroupSize = +document.getElementById('s-maxGroup').value;
+                        var difficulty = document.getElementById('s-difficulty').value;
+                        var price = +document.getElementById('s-price').value;
+                        var summary = document.getElementById('s-summary').value.trim();
+                        var imageCover = document.getElementById('s-imageCover').value.trim();
+                        var startLocationDesc = document.getElementById('s-startLocation').value.trim();
+                        if (!name || !duration || !maxGroupSize || !difficulty || !price || !summary || !imageCover) {
+                            Swal.showValidationMessage('Please fill in all required fields.');
+                            return false;
+                        }
+                        return { name: name, duration: duration, maxGroupSize: maxGroupSize, difficulty: difficulty,
+                            price: price, summary: summary, imageCover: imageCover,
+                            startLocation: { type: 'Point', coordinates: [0, 0], description: startLocationDesc } };
+                    }
+                }).then(function (res) {
+                    if (!res.isConfirmed) return;
+                    fetch('/api/v1/tours', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(res.value)
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.status === 'success') {
+                            showMsg('success', 'Tour created!');
+                            setTimeout(function () { location.reload(); }, 1500);
+                        } else { throw new Error(data.message); }
+                    })
+                    .catch(function (err) { showMsg('error', err.message || 'Could not create tour.'); });
+                });
+            });
+        })();

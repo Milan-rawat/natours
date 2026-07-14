@@ -125,6 +125,125 @@ exports.getResetPasswordForm = (req, res) => {
   });
 };
 
+// ── Admin pages ───────────────────────────────────────────────────────────────
+const ADMIN_PAGE_LIMIT = 10;
+
+exports.getAdminTours = catchAsync(async (req, res, next) => {
+  const page = Math.max(1, req.query.page * 1 || 1);
+  const limit = ADMIN_PAGE_LIMIT;
+  const skip = (page - 1) * limit;
+  const search = (req.query.search || '').trim();
+
+  const filter = search ? { name: { $regex: search, $options: 'i' } } : {};
+
+  const [tours, total] = await Promise.all([
+    Tour.find(filter)
+      .select('name slug duration difficulty price ratingsAverage ratingsQuantity maxGroupSize imageCover summary')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit),
+    Tour.countDocuments(filter),
+  ]);
+
+  res.status(200).render('adminTours', {
+    title: 'Manage Tours',
+    tours,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    search,
+  });
+});
+
+exports.getAdminUsers = catchAsync(async (req, res, next) => {
+  const page = Math.max(1, req.query.page * 1 || 1);
+  const limit = ADMIN_PAGE_LIMIT;
+  const skip = (page - 1) * limit;
+  const search = (req.query.search || '').trim();
+
+  const filter = search
+    ? { $or: [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }] }
+    : {};
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select('name email photo role')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit),
+    User.countDocuments(filter),
+  ]);
+
+  res.status(200).render('adminUsers', {
+    title: 'Manage Users',
+    users,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    search,
+  });
+});
+
+exports.getAdminReviews = catchAsync(async (req, res, next) => {
+  const page = Math.max(1, req.query.page * 1 || 1);
+  const limit = ADMIN_PAGE_LIMIT;
+  const skip = (page - 1) * limit;
+  const search = (req.query.search || '').trim();
+
+  // Filter is applied after populate — use aggregation-style approach:
+  // fetch all matching populated docs and slice (simpler than $lookup for now)
+  // For search we pre-filter by matching tour names or review text via regex
+  const reviewFilter = search ? { review: { $regex: search, $options: 'i' } } : {};
+
+  const [reviews, total] = await Promise.all([
+    Review.find(reviewFilter)
+      .populate({ path: 'user', select: 'name photo' })
+      .populate({ path: 'tour', select: 'name' })
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit),
+    Review.countDocuments(reviewFilter),
+  ]);
+
+  res.status(200).render('adminReviews', {
+    title: 'Manage Reviews',
+    reviews,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    search,
+  });
+});
+
+exports.getAdminBookings = catchAsync(async (req, res, next) => {
+  const page = Math.max(1, req.query.page * 1 || 1);
+  const limit = ADMIN_PAGE_LIMIT;
+  const skip = (page - 1) * limit;
+  const search = (req.query.search || '').trim();
+
+  // For bookings we search by user name after populate — simpler to use aggregation
+  // Build a base query; user/tour search is handled via JS after populate (small sets)
+  const [bookings, total] = await Promise.all([
+    Booking.find()
+      .populate({ path: 'user', select: 'name photo' })
+      .populate({ path: 'tour', select: 'name' })
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit),
+    Booking.countDocuments(),
+  ]);
+
+  // Apply in-memory filter for search (user/tour name — populated fields)
+  const filtered = search
+    ? bookings.filter((b) => {
+      const uName = b.user ? b.user.name.toLowerCase() : '';
+      const tName = b.tour ? b.tour.name.toLowerCase() : '';
+      return uName.includes(search.toLowerCase()) || tName.includes(search.toLowerCase());
+    })
+    : bookings;
+
+  res.status(200).render('adminBookings', {
+    title: 'Manage Bookings',
+    bookings: filtered,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    search,
+  });
+});
+
 exports.updateUserData = catchAsync(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,

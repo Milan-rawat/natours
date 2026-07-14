@@ -1,0 +1,37 @@
+//- Reusable pagination bar + search mixin for admin pages
+//- Usage: +adminPagination(pagination, search, baseUrl)
+mixin adminPagination(pag, search, baseUrl)
+    - var q = search ? '&search=' + encodeURIComponent(search) : ''
+    .admin-pagination
+        .admin-pagination__info
+            | Showing&nbsp;
+            strong #{(pag.page - 1) * pag.limit + 1}–#{Math.min(pag.page * pag.limit, pag.total)}
+            |  of&nbsp;
+            strong #{pag.total}
+            |  records
+        .admin-pagination__controls
+            if pag.page > 1
+                a.admin-pagination__btn(href=`${baseUrl}?page=${pag.page - 1}${q}`) ‹ Prev
+            else
+                span.admin-pagination__btn.admin-pagination__btn--disabled ‹ Prev
+
+            - var start = Math.max(1, pag.page - 2)
+            - var end   = Math.min(pag.totalPages, pag.page + 2)
+            if start > 1
+                a.admin-pagination__btn(href=`${baseUrl}?page=1${q}`) 1
+                if start > 2
+                    span.admin-pagination__ellipsis …
+            - for (var i = start; i <= end; i++)
+                if i === pag.page
+                    span.admin-pagination__btn.admin-pagination__btn--active= i
+                else
+                    a.admin-pagination__btn(href=`${baseUrl}?page=${i}${q}`)= i
+            if end < pag.totalPages
+                if end < pag.totalPages - 1
+                    span.admin-pagination__ellipsis …
+                a.admin-pagination__btn(href=`${baseUrl}?page=${pag.totalPages}${q}`)= pag.totalPages
+
+            if pag.page < pag.totalPages
+                a.admin-pagination__btn(href=`${baseUrl}?page=${pag.page + 1}${q}`) Next ›
+            else
+                span.admin-pagination__btn.admin-pagination__btn--disabled Next ›

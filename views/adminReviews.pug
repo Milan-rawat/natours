@@ -1,0 +1,116 @@
+extends base
+include _adminPagination
+
+block content
+    main.main
+      .user-view
+        nav.user-view__menu
+          ul.side-nav
+            li: a(href='/me')
+              svg: use(xlink:href='/img/icons.svg#icon-settings')
+              | Settings
+            li: a(href='/my-tours')
+              svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+              | My bookings
+            li: a(href='/my-reviews')
+              svg: use(xlink:href='/img/icons.svg#icon-star')
+              | My reviews
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              li: a(href='/admin/tours')
+                svg: use(xlink:href='/img/icons.svg#icon-map')
+                | Manage tours
+              li: a(href='/admin/users')
+                svg: use(xlink:href='/img/icons.svg#icon-users')
+                | Manage users
+              li.side-nav--active: a(href='/admin/reviews')
+                svg: use(xlink:href='/img/icons.svg#icon-star')
+                | Manage reviews
+              li: a(href='/admin/bookings')
+                svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Manage bookings
+
+        .user-view__content
+          .user-view__form-container.admin-table-container
+            .admin-table-header
+              h2.heading-secondary Manage Reviews
+              .admin-table-actions
+                form.admin-search-form(method='GET' action='/admin/reviews')
+                  input.form__input.admin-search#admin-search(
+                    type='text'
+                    name='search'
+                    placeholder='Search review text...'
+                    value=search
+                    autocomplete='off'
+                  )
+                  button.btn.btn--green.btn--small(type='submit') Search
+                  if search
+                    a.btn.btn--small.btn--cancel-review(href='/admin/reviews') Clear
+
+            if reviews.length === 0
+              p.reviews-empty No reviews found.
+            else
+              .admin-table-wrapper
+                table.admin-table#reviews-table
+                  thead
+                    tr
+                      th User
+                      th Tour
+                      th Rating
+                      th Review
+                      th Date
+                      th Actions
+                  tbody
+                    each review in reviews
+                      tr(data-id=`${review.id}`)
+                        td
+                          if review.user
+                            .admin-user-cell
+                              img.admin-table__avatar(src=`/img/users/${review.user.photo}` alt=`${review.user.name}`)
+                              span= review.user.name
+                          else
+                            span Deleted user
+                        td.admin-table__name= review.tour ? review.tour.name : 'Unknown'
+                        td
+                          .star-display
+                            each star in [1,2,3,4,5]
+                              svg.reviews__star(class=`reviews__star--${review.rating >= star ? 'active' : 'inactive'}`)
+                                use(xlink:href='/img/icons.svg#icon-star')
+                        td.admin-review-text= review.review
+                        td= new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                        td.admin-table__btns
+                          button.btn.btn--small.btn--red.btn--delete-review(data-id=`${review.id}`) Delete
+
+              +adminPagination(pagination, search, '/admin/reviews')
+
+block scripts
+    script.
+        (function () {
+            var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+            function showMsg(type, msg) { Toast.fire({ icon: type, title: msg }); }
+
+            // ── Delete ───────────────────────────────────────────────────────
+            document.getElementById('reviews-table').addEventListener('click', function (e) {
+                var delBtn = e.target.closest('.btn--delete-review');
+                if (!delBtn) return;
+                var id = delBtn.dataset.id;
+                Swal.fire({
+                    title: 'Delete this review?', text: 'This cannot be undone.', icon: 'warning',
+                    showCancelButton: true, confirmButtonColor: '#e74c3c', cancelButtonColor: '#aaa',
+                    confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel'
+                }).then(function (res) {
+                    if (!res.isConfirmed) return;
+                    fetch('/api/v1/reviews/' + id, { method: 'DELETE' })
+                        .then(function (r) {
+                            if (r.status === 204) {
+                                showMsg('success', 'Review deleted.');
+                                delBtn.closest('tr').remove();
+                            } else {
+                                return r.json().then(function (d) { throw new Error(d.message); });
+                            }
+                        })
+                        .catch(function (err) { showMsg('error', err.message || 'Could not delete.'); });
+                });
+            });
+        })();

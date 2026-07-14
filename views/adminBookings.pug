@@ -1,0 +1,113 @@
+extends base
+include _adminPagination
+
+block content
+    main.main
+      .user-view
+        nav.user-view__menu
+          ul.side-nav
+            li: a(href='/me')
+              svg: use(xlink:href='/img/icons.svg#icon-settings')
+              | Settings
+            li: a(href='/my-tours')
+              svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+              | My bookings
+            li: a(href='/my-reviews')
+              svg: use(xlink:href='/img/icons.svg#icon-star')
+              | My reviews
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              li: a(href='/admin/tours')
+                svg: use(xlink:href='/img/icons.svg#icon-map')
+                | Manage tours
+              li: a(href='/admin/users')
+                svg: use(xlink:href='/img/icons.svg#icon-users')
+                | Manage users
+              li: a(href='/admin/reviews')
+                svg: use(xlink:href='/img/icons.svg#icon-star')
+                | Manage reviews
+              li.side-nav--active: a(href='/admin/bookings')
+                svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Manage bookings
+
+        .user-view__content
+          .user-view__form-container.admin-table-container
+            .admin-table-header
+              h2.heading-secondary Manage Bookings
+              .admin-table-actions
+                form.admin-search-form(method='GET' action='/admin/bookings')
+                  input.form__input.admin-search#admin-search(
+                    type='text'
+                    name='search'
+                    placeholder='Search by user or tour...'
+                    value=search
+                    autocomplete='off'
+                  )
+                  button.btn.btn--green.btn--small(type='submit') Search
+                  if search
+                    a.btn.btn--small.btn--cancel-review(href='/admin/bookings') Clear
+
+            if bookings.length === 0
+              p.reviews-empty No bookings found.
+            else
+              .admin-table-wrapper
+                table.admin-table#bookings-table
+                  thead
+                    tr
+                      th User
+                      th Tour
+                      th Price
+                      th Date
+                      th Paid
+                      th Actions
+                  tbody
+                    each booking in bookings
+                      tr(data-id=`${booking.id}`)
+                        td
+                          if booking.user
+                            .admin-user-cell
+                              img.admin-table__avatar(src=`/img/users/${booking.user.photo}` alt=`${booking.user.name}`)
+                              span= booking.user.name
+                          else
+                            span Deleted user
+                        td.admin-table__name= booking.tour ? booking.tour.name : 'Unknown'
+                        td= `$${booking.price}`
+                        td= new Date(booking.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                        td
+                          span(class=`badge badge--${booking.paid ? 'success' : 'danger'}`)= booking.paid ? 'Paid' : 'Unpaid'
+                        td.admin-table__btns
+                          button.btn.btn--small.btn--red.btn--delete-booking(data-id=`${booking.id}`) Delete
+
+              +adminPagination(pagination, search, '/admin/bookings')
+
+block scripts
+    script.
+        (function () {
+            var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+            function showMsg(type, msg) { Toast.fire({ icon: type, title: msg }); }
+
+            // ── Delete ───────────────────────────────────────────────────────
+            document.getElementById('bookings-table').addEventListener('click', function (e) {
+                var delBtn = e.target.closest('.btn--delete-booking');
+                if (!delBtn) return;
+                var id = delBtn.dataset.id;
+                Swal.fire({
+                    title: 'Delete this booking?', text: 'This cannot be undone.', icon: 'warning',
+                    showCancelButton: true, confirmButtonColor: '#e74c3c', cancelButtonColor: '#aaa',
+                    confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel'
+                }).then(function (res) {
+                    if (!res.isConfirmed) return;
+                    fetch('/api/v1/bookings/' + id, { method: 'DELETE' })
+                        .then(function (r) {
+                            if (r.status === 204) {
+                                showMsg('success', 'Booking deleted.');
+                                delBtn.closest('tr').remove();
+                            } else {
+                                return r.json().then(function (d) { throw new Error(d.message); });
+                            }
+                        })
+                        .catch(function (err) { showMsg('error', err.message || 'Could not delete booking.'); });
+                });
+            });
+        })();

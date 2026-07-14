@@ -810,6 +810,15 @@ body {
   background-color: #c0392b;
 }
 
+.btn--yellow {
+  background-color: #f39c12;
+  color: #fff;
+}
+
+.btn--yellow:hover {
+  background-color: #d68910;
+}
+
 .btn--cancel-review {
   background-color: #aaa;
   color: #fff;
@@ -992,6 +1001,8 @@ body {
   -ms-flex: 1;
   flex: 1;
   padding: 7rem 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .user-view__form-container {
@@ -1631,3 +1642,282 @@ body {
   -webkit-transform: translateY(-2px);
   transform: translateY(-2px);
 }
+
+
+/* ── Admin Tables ─────────────────────────────────────────────────────────── */
+.admin-table-container {
+  max-width: 100%;
+  padding: 0 2rem;
+}
+
+/* When admin table container is also a form-container, lift the 68rem cap */
+.user-view__form-container.admin-table-container {
+  max-width: 100%;
+  padding: 0 3rem;
+}
+
+.admin-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.admin-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.admin-search {
+  width: 24rem !important;
+  padding: 0.9rem 1.4rem !important;
+  font-size: 1.4rem !important;
+}
+
+.admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .08);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.4rem;
+  background: #fff;
+}
+
+.admin-table thead {
+  background: linear-gradient(to right bottom, #7dd56f, #28b487);
+  color: #fff;
+}
+
+.admin-table thead th {
+  padding: 1.4rem 1.6rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+}
+
+.admin-table tbody tr:hover {
+  background: #f9fffe;
+}
+
+.admin-table tbody td {
+  padding: 1.2rem 1.6rem;
+  vertical-align: middle;
+  color: #444;
+}
+
+.admin-table__img {
+  width: 5.5rem;
+  height: 3.8rem;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
+.admin-table__avatar {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.admin-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  white-space: nowrap;
+}
+
+.admin-table__name {
+  font-weight: 600;
+  color: #333;
+  max-width: 18rem;
+}
+
+.admin-review-text {
+  max-width: 22rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-table__btns {
+  display: flex;
+  gap: 0.8rem;
+  white-space: nowrap;
+}
+
+/* ── Admin reviews — star rating display ─────────────────────────────────── */
+.star-display {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.star-display .reviews__star {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.reviews__star--active {
+  fill: #ffb900;
+}
+
+.reviews__star--inactive {
+  fill: #ccc;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border-radius: 50px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge--easy {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge--medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge--difficult {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.badge--role {}
+
+.badge--user {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.badge--guide {
+  background: #bee3f8;
+  color: #2b6cb0;
+}
+
+.badge--lead-guide {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.badge--admin {
+  background: #fed7d7;
+  color: #9b2c2c;
+}
+
+.badge--success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge--danger {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* ── Admin Search Form ────────────────────────────────────────────────────── */
+.admin-search-form {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.admin-search-form .admin-search {
+  width: 24rem !important;
+  padding: 0.9rem 1.4rem !important;
+  font-size: 1.4rem !important;
+}
+
+/* ── Admin Pagination ─────────────────────────────────────────────────────── */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.8rem 0 0.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-pagination__info {
+  font-size: 1.4rem;
+  color: #777;
+}
+
+.admin-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.4rem;
+  height: 3.4rem;
+  padding: 0 1rem;
+  border-radius: 6px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #55c57a;
+  border: 1.5px solid #d0f0de;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.admin-pagination__btn:hover {
+  background: #eafaf1;
+  border-color: #55c57a;
+  color: #28b487;
+}
+
+.admin-pagination__btn--active {
+  background: linear-gradient(to right bottom, #7dd56f, #28b487);
+  color: #fff !important;
+  border-color: transparent;
+  cursor: default;
+}
+
+.admin-pagination__btn--disabled {
+  color: #ccc;
+  border-color: #eee;
+  background: #fafafa;
+  cursor: default;
+  pointer-events: none;
+}
+
+.admin-pagination__ellipsis {
+  font-size: 1.4rem;
+  color: #aaa;
+  padding: 0 0.4rem;
+  user-select: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */

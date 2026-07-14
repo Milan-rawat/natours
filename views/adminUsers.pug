@@ -1,0 +1,157 @@
+extends base
+include _adminPagination
+
+block content
+    main.main
+      .user-view
+        nav.user-view__menu
+          ul.side-nav
+            li: a(href='/me')
+              svg: use(xlink:href='/img/icons.svg#icon-settings')
+              | Settings
+            li: a(href='/my-tours')
+              svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+              | My bookings
+            li: a(href='/my-reviews')
+              svg: use(xlink:href='/img/icons.svg#icon-star')
+              | My reviews
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              li: a(href='/admin/tours')
+                svg: use(xlink:href='/img/icons.svg#icon-map')
+                | Manage tours
+              li.side-nav--active: a(href='/admin/users')
+                svg: use(xlink:href='/img/icons.svg#icon-users')
+                | Manage users
+              li: a(href='/admin/reviews')
+                svg: use(xlink:href='/img/icons.svg#icon-star')
+                | Manage reviews
+              li: a(href='/admin/bookings')
+                svg: use(xlink:href='/img/icons.svg#icon-briefcase')
+                | Manage bookings
+
+        .user-view__content
+          .user-view__form-container.admin-table-container
+            .admin-table-header
+              h2.heading-secondary Manage Users
+              .admin-table-actions
+                form.admin-search-form(method='GET' action='/admin/users')
+                  input.form__input.admin-search#admin-search(
+                    type='text'
+                    name='search'
+                    placeholder='Search by name or email...'
+                    value=search
+                    autocomplete='off'
+                  )
+                  button.btn.btn--green.btn--small(type='submit') Search
+                  if search
+                    a.btn.btn--small.btn--cancel-review(href='/admin/users') Clear
+
+            if users.length === 0
+              p.reviews-empty No users found.
+            else
+              .admin-table-wrapper
+                table.admin-table#users-table
+                  thead
+                    tr
+                      th Photo
+                      th Name
+                      th Email
+                      th Role
+                      th Actions
+                  tbody
+                    each u in users
+                      tr(data-id=`${u.id}`)
+                        td
+                          img.admin-table__avatar(src=`/img/users/${u.photo}` alt=`${u.name}`)
+                        td.admin-table__name= u.name
+                        td= u.email
+                        td
+                          span(class=`badge badge--role badge--${u.role}`)= u.role
+                        td.admin-table__btns
+                          button.btn.btn--small.btn--yellow.btn--edit-user(
+                              data-id=`${u.id}`
+                              data-name=`${u.name}`
+                              data-email=`${u.email}`
+                              data-role=`${u.role}`
+                          ) Edit
+                          button.btn.btn--small.btn--red.btn--delete-user(data-id=`${u.id}`) Delete
+
+              +adminPagination(pagination, search, '/admin/users')
+
+block scripts
+    script.
+        (function () {
+            var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+            function showMsg(type, msg) { Toast.fire({ icon: type, title: msg }); }
+
+            document.getElementById('users-table').addEventListener('click', function (e) {
+
+                // ── Delete ───────────────────────────────────────────────────
+                var delBtn = e.target.closest('.btn--delete-user');
+                if (delBtn) {
+                    var id = delBtn.dataset.id;
+                    Swal.fire({
+                        title: 'Delete this user?', text: 'This cannot be undone.', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#e74c3c', cancelButtonColor: '#aaa',
+                        confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel'
+                    }).then(function (res) {
+                        if (!res.isConfirmed) return;
+                        fetch('/api/v1/users/' + id, { method: 'DELETE' })
+                            .then(function (r) {
+                                if (r.status === 204) {
+                                    showMsg('success', 'User deleted.');
+                                    delBtn.closest('tr').remove();
+                                } else {
+                                    return r.json().then(function (d) { throw new Error(d.message); });
+                                }
+                            })
+                            .catch(function (err) { showMsg('error', err.message || 'Could not delete user.'); });
+                    });
+                    return;
+                }
+
+                // ── Edit ─────────────────────────────────────────────────────
+                var editBtn = e.target.closest('.btn--edit-user');
+                if (editBtn) {
+                    var uid = editBtn.dataset.id;
+                    Swal.fire({
+                        title: 'Edit User',
+                        html:
+                            '<input id="u-name"  class="swal2-input" placeholder="Name"  value="' + editBtn.dataset.name + '">' +
+                            '<input id="u-email" class="swal2-input" type="email" placeholder="Email" value="' + editBtn.dataset.email + '">' +
+                            '<select id="u-role" class="swal2-select" style="width:90%;padding:10px;margin:5px 0;font-size:1.4rem">' +
+                                '<option value="user"'       + (editBtn.dataset.role === 'user'       ? ' selected' : '') + '>User</option>' +
+                                '<option value="guide"'      + (editBtn.dataset.role === 'guide'      ? ' selected' : '') + '>Guide</option>' +
+                                '<option value="lead-guide"' + (editBtn.dataset.role === 'lead-guide' ? ' selected' : '') + '>Lead Guide</option>' +
+                                '<option value="admin"'      + (editBtn.dataset.role === 'admin'      ? ' selected' : '') + '>Admin</option>' +
+                            '</select>',
+                        confirmButtonColor: '#55c57a',
+                        showCancelButton: true,
+                        preConfirm: function () {
+                            return {
+                                name:  document.getElementById('u-name').value.trim(),
+                                email: document.getElementById('u-email').value.trim(),
+                                role:  document.getElementById('u-role').value
+                            };
+                        }
+                    }).then(function (res) {
+                        if (!res.isConfirmed) return;
+                        fetch('/api/v1/users/' + uid, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(res.value)
+                        })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.status === 'success') {
+                                showMsg('success', 'User updated!');
+                                setTimeout(function () { location.reload(); }, 1200);
+                            } else { throw new Error(data.message); }
+                        })
+                        .catch(function (err) { showMsg('error', err.message || 'Could not update user.'); });
+                    });
+                }
+            });
+        })();
