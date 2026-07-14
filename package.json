@@ -8,8 +8,8 @@
     "dev": "nodemon server.js",
     "start:prod": "NODE_ENV=production nodemon server.js",
     "debug": "ndb server.js",
-    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
-    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+    "watch:js": "parcel watch ./public/js/index.js --dist-dir ./public/js",
+    "build:js": "parcel build ./public/js/index.js --dist-dir ./public/js --no-cache"
   },
   "author": "Milan Rawat",
   "license": "ISC",
@@ -50,7 +50,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.3.0",
     "eslint-plugin-react": "^7.21.5",
-    "parcel-bundler": "^1.12.4",
+    "parcel": "^2.16.4",
     "prettier": "^2.2.1"
   },
   "engines": {
