@@ -25,12 +25,19 @@ if (mapBox) {
 }
 
 if (loginForm) {
-  document.querySelector('.form').addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const btn = loginForm.querySelector('.btn');
+    btn.textContent = 'Logging in...';
+    btn.disabled = true;
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    login(email, password);
+    await login(email, password);
+
+    btn.textContent = 'Login';
+    btn.disabled = false;
   });
 }
 
