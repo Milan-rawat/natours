@@ -6,12 +6,7 @@ export const signup = async (name, email, password, passwordConfirm) => {
         const res = await axios({
             method: 'POST',
             url: '/api/v1/users/signup',
-            data: {
-                name,
-                email,
-                password,
-                passwordConfirm,
-            },
+            data: { name, email, password, passwordConfirm },
         });
 
         if (res.data.status === 'success') {
@@ -21,6 +16,17 @@ export const signup = async (name, email, password, passwordConfirm) => {
             }, 1500);
         }
     } catch (err) {
-        showAlert('error', err.response.data.message);
+        const serverMessage = err.response?.data?.message || '';
+
+        // MongoDB duplicate key error — email already registered
+        if (
+            err.response?.data?.error?.code === 11000 ||
+            serverMessage.includes('duplicate key') ||
+            serverMessage.includes('dup key')
+        ) {
+            showAlert('error', 'This email is already registered. Please log in instead.');
+        } else {
+            showAlert('error', serverMessage || 'Something went wrong. Please try again.');
+        }
     }
 };

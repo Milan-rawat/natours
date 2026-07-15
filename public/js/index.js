@@ -42,14 +42,21 @@ if (loginForm) {
 }
 
 if (signupForm) {
-  signupForm.addEventListener('submit', (e) => {
+  signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const btn = signupForm.querySelector('.btn');
+    btn.textContent = 'Creating account...';
+    btn.disabled = true;
 
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const passwordConfirm = document.getElementById('passwordConfirm').value;
-    signup(name, email, password, passwordConfirm);
+    await signup(name, email, password, passwordConfirm);
+
+    btn.textContent = 'Sign up';
+    btn.disabled = false;
   });
 }
 
