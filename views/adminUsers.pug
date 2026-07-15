@@ -64,7 +64,7 @@ block content
                     each u in users
                       tr(data-id=`${u.id}`)
                         td
-                          img.admin-table__avatar(src=`/img/users/${u.photo}` alt=`${u.name}`)
+                          img.admin-table__avatar(src=`/img/users/uploads/${u.photo}` alt=`${u.name}`)
                         td.admin-table__name= u.name
                         td= u.email
                         td

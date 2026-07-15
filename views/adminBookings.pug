@@ -67,7 +67,7 @@ block content
                         td
                           if booking.user
                             .admin-user-cell
-                              img.admin-table__avatar(src=`/img/users/${booking.user.photo}` alt=`${booking.user.name}`)
+                              img.admin-table__avatar(src=`/img/users/uploads/${booking.user.photo}` alt=`${booking.user.name}`)
                               span= booking.user.name
                           else
                             span Deleted user

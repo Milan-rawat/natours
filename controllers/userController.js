@@ -42,8 +42,8 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     .jpeg({ quality: 90 })
     .toFile(`public/img/users/uploads/${req.file.filename}`);
 
-  // Store with uploads/ prefix so the URL resolves to /img/users/uploads/<filename>
-  req.file.filename = `uploads/${req.file.filename}`;
+  // Only the bare filename is stored in the DB.
+  // Templates prepend "uploads/" when building the <img> src.
 
   next();
 });
