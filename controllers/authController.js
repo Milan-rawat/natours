@@ -36,17 +36,12 @@ const createSendToken = (user, statusCode, req, res) => {
 
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create(req.body);
-  //   const newUser = await User.create({
-  //     role: req.body.role,
-  //     name: req.body.name,
-  //     email: req.body.email,
-  //     password: req.body.password,
-  //     passwordConfirm: req.body.passwordConfirm,
-  //     passwordChangedAt: req.body.passwordChangedAt,
-  //   });
   const url = `${req.protocol}://${req.get('host')}/me`;
-  // console.log(url);
-  await new Email(newUser, url).sendWelcome();
+
+  // Send welcome email in background — don't block signup on email failure
+  new Email(newUser, url).sendWelcome().catch((err) => {
+    console.error('Welcome email failed:', err.message);
+  });
 
   createSendToken(newUser, 201, req, res);
 });
