@@ -2,14 +2,21 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "Learning node, express and mongoDB",
-  "main": "app.js",
+  "source": "./public/js/index.js",
+  "targets": {
+    "frontend": {
+      "distDir": "./public/dist",
+      "context": "browser",
+      "outputFormat": "global"
+    }
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "start:prod": "cross-env NODE_ENV=production nodemon server.js",
     "debug": "ndb server.js",
-    "watch:js": "parcel watch ./public/js/index.js --dist-dir ./public/js",
-    "build:js": "parcel build ./public/js/index.js --dist-dir ./public/js --no-cache"
+    "watch:js": "parcel watch --target frontend",
+    "build:js": "parcel build --target frontend --no-cache"
   },
   "author": "Milan Rawat",
   "license": "ISC",

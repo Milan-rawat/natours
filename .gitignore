@@ -1,5 +1,13 @@
 node_modules/
 *.env
 .cache/
+.parcel-cache/
+
+# Build output
+public/dist/
+
+# Parcel source maps leaked to project root
+*.js.map
+
 # Ignore runtime user-uploaded photos but keep seed photos and .gitkeep
 public/img/users/uploads/user-*-*.jpeg
